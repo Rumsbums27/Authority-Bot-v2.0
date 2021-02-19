@@ -8,8 +8,12 @@ class HelpCog(commands.Cog):
     @commands.command()
     async def help(self,ctx):
         embed = Embed(
-            title='Help'
+            title='Help',
+            color=0x00ffff
         )
+        embed.add_field(name='Prefix',value='`.`')
+        embed.add_field(name='Commands',value='`help` - Zeigt diese Nachricht')
+        await ctx.send(embed=embed)
 
 def setup(bot):
     bot.add_cog(HelpCog(bot))

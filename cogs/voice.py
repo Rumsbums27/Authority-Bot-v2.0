@@ -1,15 +1,13 @@
 from discord.ext import commands
-from discord import PermissionOverwrite,Member
+from discord import PermissionOverwrite, Member
+
 
 class VoiceCog(commands.Cog):
-    def __init__(self,bot):
+    def __init__(self, bot):
         self.bot = bot
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
-#        if member.bot:
-#            return
-
         if after.channel:
             if after.channel.name == 'New Talk':
                 category = after.channel.category
@@ -20,7 +18,7 @@ class VoiceCog(commands.Cog):
 
             if after.channel.name == 'New Private Talk':
                 overwrites = {
-                    after.channel.guild.default_role: PermissionOverwrite(connect=False,view_channel=False),
+                    after.channel.guild.default_role: PermissionOverwrite(connect=False, view_channel=False),
                     member: PermissionOverwrite(connect=True,
                                                 speak=True,
                                                 mute_members=True,
@@ -36,26 +34,22 @@ class VoiceCog(commands.Cog):
         if before.channel:
             if before.channel.category.name == 'Voice':
                 if len(before.channel.members) == 0:
-                    if before.channel.name == 'New Talk':
-                        pass
-                    else:
+                    if not before.channel.name == 'New Talk':
                         await before.channel.delete()
 
             if before.channel.category.name == 'Private':
                 if len(before.channel.members) == 0:
-                    if before.channel.name == 'New Private Talk':
-                        pass
-                    else:
+                    if not before.channel.name == 'New Private Talk':
                         await before.channel.delete()
 
     @commands.command()
-    async def voice(self,ctx,member:Member):
+    async def voice(self, ctx, member: Member):
         if ctx.author.voice:
             if ctx.author.voice.channel.category.name == 'Private':
                 if ctx.author.permissions_in(ctx.author.voice.channel).mute_members:
-                    invite = await ctx.author.voice.channel.create_invite(max_age=600,max_uses=1, temporary=True)
+                    invite = await ctx.author.voice.channel.create_invite(max_age=600, max_uses=1, temporary=True)
                     await member.send(invite)
-                    await ctx.author.voice.channel.set_permissions(member,connect=True,view_channel=True,speak=True)
+                    await ctx.author.voice.channel.set_permissions(member, connect=True, view_channel=True, speak=True)
 
 
 def setup(bot):

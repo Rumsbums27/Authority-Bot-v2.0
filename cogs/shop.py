@@ -221,7 +221,7 @@ class ShopCog(commands.Cog):
             for i in shop_inventory.find({'_id': name}):
                 price = i['price']
                 category = i['category']
-                need_cooldown = i['cooldown'])
+                need_cooldown = i['cooldown']
                 if need_cooldown:
                     await self.buy_with_cooldown(
                         ctx = ctx, name = name, price = price, category = category, amount = amount)

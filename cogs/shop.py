@@ -70,7 +70,7 @@ class ShopCog(commands.Cog):
                 if i['has_cooldown']:
                     plant_cooldown = i['cooldown']
                     category = i['category']
-                    give_amount = i['give']
+                    give_amount = i['give_amount']
                     give_name = i['give_name']
                     if inventory.find_one({'_id': ctx.author.id}):
                         for x in inventory.find({'_id': ctx.author.id}):

@@ -23,7 +23,7 @@ class ShopCog(commands.Cog):
 
     def current_time(self):
         time = datetime.datetime.now(tz=timezome)
-        return time.strftime('%H-%M-%S')
+        return int(time.strftime('%H.%M'))
 
     async def insert_new_user(self, ctx):
         """
@@ -59,7 +59,7 @@ class ShopCog(commands.Cog):
     @commands.command(aliases=['ls', 'list-shop', 'listShop', 'Listshop'])
     async def list_shop(self, ctx):
         list_shop_embed = Embed(title='SHOP', color=Color.green)
-        list_shop_embed.add_field(name='Weed', value='A little green Plant... look likes Tea...')
+        list_shop_embed.add_field(name='Grass', value='A little green Plant... look likes Tea...')
         ctx.channel.send(embed=list_shop_embed)
 
     @commands.command()
@@ -109,38 +109,74 @@ class ShopCog(commands.Cog):
                     farm_embed.add_field(name=x, value=f"Amount: {drugs[x]['amount']}")
                 await ctx.channel.send(embed=farm_embed)
 
+    def buy_with_cooldown(self, ctx, name, price, category, amount):
+        if inventory.find_one({'_id': ctx.author.id}):
+            for x in inventory.find({'_id': ctx.author.id}):
+                money = x['money']
+                current_business = x['business']
+                if money - price * amount >= 0:
+                    inventory.update_one({'_id': ctx.author.id}, {'$set': {'money': money - (price * amount)}})
+                    if name in current_business[category]:
+                        current_amount = current_business[category][name]['amount']
+                        current_business[category][name]['amount'] = current_amount + amount
+                        current_business[category][name]['cooldown'] = self.current_time()
+                        inventory.update_one({'_id': ctx.author.id},
+                                             {'$set': {'business': current_business}})
+                        sucess_buy = Embed(title=f'Sucessfully buyed {name}, {amount} times', color=Color.green)
+                        await ctx.channel.send(embed=sucess_buy)
+                    else:
+                        current_business[category][name] = {'amount': amount, 'cooldown': self.current_time()}
+                        inventory.update_one({'_id': ctx.author.id},
+                                             {'$set': {'business': current_business}})
+                        sucess_buy = Embed(title=f'Sucessfully buyed {name}, {amount} times', color=Color.green)
+                        await ctx.channel.send(embed=sucess_buy)
+        else:
+            dont_start_business = Embed(
+                title="You don't started you're business yet.. maybe you start it with `.sb`?", color=0xff0000)
+            await ctx.channel.send(embed=dont_start_business)
+
+    def buy_without_cooldown(self, ctx, name, price, category, amount):
+        if inventory.find_one({'_id': ctx.author.id}):
+            for x in inventory.find({'_id': ctx.author.id}):
+                money = x['money']
+                current_business = x['business']
+                if money - price * amount >= 0:
+                    inventory.update_one({'_id': ctx.author.id}, {'$set': {'money': money - (price * amount)}})
+                    if name in current_business[category]:
+                        current_amount = current_business[category][name]['amount']
+                        current_business[category][name]['amount'] = current_amount + amount
+                        inventory.update_one({'_id': ctx.author.id},
+                                             {'$set': {'category': current_business}})
+                        sucess_buy = Embed(title=f'Sucessfully buyed {name}, {amount} times', color=Color.green)
+                        await ctx.channel.send(embed=sucess_buy)
+                    else:
+                        current_business[category][name] = {'amount': amount}
+                        inventory.update_one({'_id': ctx.author.id},
+                                             {'$set': {'category': current_business}})
+                        sucess_buy = Embed(title=f'Sucessfully buyed {name}, {amount} times', color=Color.green)
+                        await ctx.channel.send(embed=sucess_buy)
+
     @commands.command()
     async def buy(self, ctx, name, amount=1):
         if shop_inventory.find_one({'_id': name}):
             for i in shop_inventory.find({'_id': name}):
                 price = i['price']
                 category = i['category']
-                if inventory.find_one({'_id': ctx.author.id}):
-                    for x in inventory.find({'_id': ctx.author.id}):
-                        money = x['money']
-                        current_business = x['business']
-                        if money - price * amount >= 0:
-                            inventory.update_one({'_id': ctx.author.id}, {'$set': {'money': money - (price * amount)}})
-                            if name in current_business[category]:
-                                current_amount = current_business[category][name]['amount']
-                                current_business[category][name]['amount'] = current_amount + amount
-                                current_business[category][name]['cooldown'] = self.current_time()
-                                inventory.update_one({'_id': ctx.author.id},
-                                                     {'$set': {'category': current_business}})
-                                sucess_buy = Embed(title=f'Sucessfully buyed {name}, {amount} times', color=Color.green)
-                                await ctx.channel.send(embed=sucess_buy)
-                            else:
-                                current_business[category][name] = {'amount': amount, 'cooldown': self.current_time()}
-                                inventory.update_one({'_id': ctx.author.id},
-                                                     {'$set': {'category': current_business}})
-                                sucess_buy = Embed(title=f'Sucessfully buyed {name}, {amount} times', color=Color.green)
-                                await ctx.channel.send(embed=sucess_buy)
-
-                else:
-                    dont_start_business = Embed(
-                        title="You don't started you're business yet.. maybe you start it with `.sb`?", color=0xff0000)
-                    await ctx.channel.send(embed=dont_start_business)
+                need_cooldown = i['cooldown']
+                if need_cooldown:
+                    self.buy_with_cooldown(ctx=ctx, name=name, price=price, category=category, amount=amount)
+                self.buy_without_cooldown(ctx=ctx, name=name, price=price, category=category, amount=amount)
 
 
 def setup(bot):
     bot.add_cog(ShopCog(bot))
+
+
+# ToDo: Add first Element to shop_inventory db
+"""
+shop inv looks like
+'_id': <str: drug/plant-name>,'has_cooldown': <bool: Need cooldown> ,'cooldown': <int: hours to wait, when needed(negative)>, 
+'price': <int/float: to buy this>, 'resell_price': <int/float: to resell this>, 'category': <str: name of category>,
+'give_amount': <int: amount of get when harvest>, 'give': <str: name of thing to get when harvest>
+
+"""

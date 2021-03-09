@@ -60,6 +60,7 @@ class ShopCog(commands.Cog):
     async def list_shop(self, ctx):
         list_shop_embed = Embed(title='SHOP', color=Color.green)
         list_shop_embed.add_field(name='Weed', value='A little green Plant... look likes Tea...')
+        ctx.channel.send(embed=list_shop_embed)
 
     @commands.command()
     async def farm(self, ctx):
@@ -100,9 +101,9 @@ class ShopCog(commands.Cog):
                                 await ctx.channel.send(embed=sucess_buy)
 
                 else:
-                    dont_start_buissnis = Embed(
+                    dont_start_business = Embed(
                         title="You don't started you're business yet.. maybe you start it with `.sb`?", color=0xff0000)
-                    await ctx.channel.send(embed=dont_start_buissnis)
+                    await ctx.channel.send(embed=dont_start_business)
 
 
 def setup(bot):

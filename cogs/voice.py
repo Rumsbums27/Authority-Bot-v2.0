@@ -50,6 +50,7 @@ class VoiceCog(commands.Cog):
                     invite = await ctx.author.voice.channel.create_invite(max_age=600, max_uses=1, temporary=True)
                     await member.send(invite)
                     await ctx.author.voice.channel.set_permissions(member, connect=True, view_channel=True, speak=True)
+                    await ctx.channel.send('`User invited`')
 
 
 def setup(bot):

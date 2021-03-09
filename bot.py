@@ -19,17 +19,16 @@ async def reload(ctx, extension):
     await ctx.send(embed=embed)
 
 
-@bot.event
-async def on_command_error(ctx, error):
-    embed = Embed(
-        title='Error',
-        description=f'{error}',
-        color=0xff0000
-    )
-    await ctx.send(embed=embed)
+#@bot.event
+#async def on_command_error(ctx, error):
+#    embed = Embed(
+#        title='Error',
+#        description=f'{error}',
+#        color=0xff0000
+#    )
+#    await ctx.send(embed=embed)
 
 disabled = [
-    'shop'
 ]
 
 for filename in os.listdir('./cogs'):

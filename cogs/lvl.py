@@ -26,8 +26,8 @@ class LvlCog(commands.Cog):
         generated_xp = self.xpgen(a=5, b=10)
         check = xp.find_one({'_id': f'{ctx.author.id}'})
         if check:
-            for _ in xp.find({'_id': f'{ctx.author.id}'}):
-                current_xp = _['how_much_xp']
+            for i in xp.find({'_id': f'{ctx.author.id}'}):
+                current_xp = i['how_much_xp']
                 current_xp += generated_xp
                 xp.update_one({'_id': f'{ctx.author.id}'}, {
                     '$set': {'how_much_xp': current_xp}
@@ -50,8 +50,8 @@ class LvlCog(commands.Cog):
             member = ctx.author
         check = xp.find_one({'_id': f'{member.id}'})
         if check:
-            for _ in xp.find({'_id': f'{member.id}'}):
-                current_xp = _['how_much_xp']
+            for i in xp.find({'_id': f'{member.id}'}):
+                current_xp = i['how_much_xp']
                 rank = Embed(
                     title='Level',
                     color=0x5864a6

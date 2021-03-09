@@ -1,5 +1,4 @@
 from discord.ext import commands
-from discord.colour import Color
 from discord import Embed
 from pymongo import MongoClient
 from dotenv import load_dotenv
@@ -59,10 +58,10 @@ class ShopCog(commands.Cog):
 
     @commands.command(aliases=['ls', 'list-shop', 'listShop', 'Listshop'])
     async def list_shop(self, ctx):
-        list_shop_embed = Embed(title='SHOP', color=Color.green)
+        list_shop_embed = Embed(title='SHOP', color=0x00ff00)
         list_shop_embed.add_field(
             name='Grass', value='A little green Plant... look likes Tea...')
-        ctx.channel.send(embed=list_shop_embed)
+        await ctx.channel.send(embed=list_shop_embed)
 
     @commands.command()
     async def harvest(self, ctx, name):

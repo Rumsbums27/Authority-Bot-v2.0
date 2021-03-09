@@ -75,28 +75,31 @@ class ShopCog(commands.Cog):
                     if inventory.find_one({'_id': ctx.author.id}):
                         for x in inventory.find({'_id': ctx.author.id}):
                             current_business = x['business']
-                            plant_amount = current_business[category][name]['amount']
-                            has_harvest = current_business[category][name]['cooldown']
-                            if has_harvest - self.current_time() >= plant_cooldown:
-                                for y in shop_inventory.find({'_id': give_name}):
-                                    category = y['category']
-                                    current_amount = current_business[category][give_name]['amount']
-                                    current_business[category][give_name]['amount'] = current_amount + (
-                                        give_amount * plant_amount)
-                                    inventory.update_one({'_id': ctx.author.id},
-                                                         {'$set': {'business': current_business}})
-                                    sucess_harved = Embed(
-                                        title=f"""Congrats Bro, you have harvest {current_amount + (
-                                                give_amount * plant_amount)} {give_name}"""
-                                    )
+                            if current_business[category][name]:
+                                plant_amount = current_business[category][name]['amount']
+                                has_harvest = current_business[category][name]['cooldown']
+                                if has_harvest - self.current_time() >= plant_cooldown:
+                                    for y in shop_inventory.find({'_id': give_name}):
+                                        category = y['category']
+                                        current_amount = current_business[category][give_name]['amount']
+                                        current_business[category][give_name]['amount'] = current_amount + (
+                                            give_amount * plant_amount)
+                                        inventory.update_one({'_id': ctx.author.id},
+                                                            {'$set': {'business': current_business}})
+                                        sucess_harved = Embed(
+                                            title=f"""Congrats Bro, you have harvest {current_amount + (
+                                                    give_amount * plant_amount)} {give_name}"""
+                                        )
+                                else:
+                                    has_haved = Embed(
+                                        title='Yo, yo, yo bro you already harvest, try it later again',
+                                        color=0xFF0000)
+                                    await ctx.channel.send(embed=has_harved)
                             else:
-                                has_haved = Embed(
-                                    title='Yo, yo, yo bro you already harvest, try it later again',
-                                    color=Color.red)
-                                await ctx.channel.send(embed=has_haved)
+                                nothing_to_harvest = Embed(title='Bro, you dont own this Plant...', color=0xFF0000)
                 else:
                     not_harvestable = Embed(title='Yo dude you want to harvest somethinng that is not harvestable',
-                                            color=Color.red)
+                                            color=0xFF0000)
                     await ctx.channel.send(embed=not_harvestable)
 
     @commands.command(aliases=['inv'])

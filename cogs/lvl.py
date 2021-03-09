@@ -3,6 +3,7 @@ from random import randint
 from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
+from discord import Embed, Member
 
 
 load_dotenv()
@@ -20,18 +21,52 @@ class LvlCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, ctx):
-        if ctx.author == commands.bot:
+        if ctx.author.bot:
             return
         generated_xp = self.xpgen(a=5, b=10)
-        if check := xp.find({'_id': f'{ctx.author.id}'}):
-            for _ in check:
+        check = xp.find_one({'_id': f'{ctx.author.id}'})
+        if check:
+            for _ in xp.find({'_id': f'{ctx.author.id}'}):
                 current_xp = _['how_much_xp']
                 current_xp += generated_xp
-                xp.update_one({'_id': f'{ctx.author}'}), {
+                xp.update_one({'_id': f'{ctx.author.id}'}, {
                     '$set': {'how_much_xp': current_xp}
-                }
+                })
+                if current_xp % 100 <= 10:
+                    level_up = Embed(
+                        title='Level Up',
+                        color=0x946523
+                    )
+                    level_up.add_field(name='Level', value=f'{current_xp // 100}')
+                    level_up.add_field(name='XP', value=f'{current_xp}')
+                    await ctx.channel.send(embed=level_up)
+
         else:
-            xp.insert_one({'_id': f'{ctx.author}', 'how_much_xp': generated_xp})
+            xp.insert_one({'_id': f'{ctx.author.id}', 'how_much_xp': generated_xp})
+
+    @commands.command()
+    async def lvl(self, ctx, member: Member = None):
+        if member is None:
+            member = ctx.author
+        check = xp.find_one({'_id': f'{member.id}'})
+        if check:
+            for _ in xp.find({'_id': f'{member.id}'}):
+                current_xp = _['how_much_xp']
+                rank = Embed(
+                    title='Level',
+                    color=0x5864a6
+                )
+                rank.add_field(name='Level', value=f'{current_xp // 100}')
+                rank.add_field(name='XP', value=f'{current_xp}')
+                await ctx.send(embed=rank)
+
+        else:
+            not_in_database = Embed(
+                title='Not in Database',
+                description="You or the User you mentioned is not in the database yet.",
+                color=0x93b349
+            )
+            await ctx.send(embed=not_in_database)
 
 
 def setup(bot):

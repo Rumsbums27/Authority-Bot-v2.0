@@ -28,11 +28,15 @@ async def on_command_error(ctx, error):
     )
     await ctx.send(embed=embed)
 
+disabled = [
+    'shop'
+]
 
 for filename in os.listdir('./cogs'):
     if filename.endswith('.py'):
-        bot.load_extension(f'cogs.{filename[:-3]}')
-        print(f'Successfully loaded {filename[:-3]}')
+        if filename[:-3] not in disabled:
+            bot.load_extension(f'cogs.{filename[:-3]}')
+            print(f'Successfully loaded {filename[:-3]}')
 
 load_dotenv()
 bot.run(os.getenv('TOKEN'))

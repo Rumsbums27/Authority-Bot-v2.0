@@ -14,7 +14,7 @@ cluster = MongoClient(os.getenv("MONGODB"))
 db = cluster['authority']
 inventory = db['inventory']
 shop_inventory = db['shop-inv']
-timezome = pytz.timezone('DE/Berlin')
+timezome = pytz.timezone('Europe/Berlin')
 
 
 class ShopCog(commands.Cog):

@@ -1,6 +1,7 @@
 /cogs/__pycache__
 /.idea
 /venv
+.vscode
 .env
 Authority v2.0.png
 venv

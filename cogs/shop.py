@@ -63,8 +63,44 @@ class ShopCog(commands.Cog):
         ctx.channel.send(embed=list_shop_embed)
 
     @commands.command()
-    async def farm(self, ctx):
-        farm_embed = Embed(title="You're Farm:", color=Color.green)
+    async def harvest(self, ctx, name):
+        if shop_inventory.find_one({'_id': name}):
+            for i in shop_inventory.find({'_id': name}):
+                if i['has_cooldown']:
+                    plant_cooldown = i['cooldown']
+                    category = i['category']
+                    give_amount = i['give']
+                    give_name = i['give_name']
+                    if inventory.find_one({'_id': ctx.author.id}):
+                        for x in inventory.find({'_id': ctx.author.id}):
+                            current_business = x['business']
+                            plant_amount = current_business[category][name]['amount']
+                            has_harvest = current_business[category][name]['cooldown']
+                            if has_harvest - self.current_time() >= plant_cooldown:
+                                for y in shop_inventory.find({'_id': give_name}):
+                                    category = y['category']
+                                    current_amount = current_business[category][give_name]['amount']
+                                    current_business[category][give_name]['amount'] = current_amount + (
+                                                give_amount * plant_amount)
+                                    inventory.update_one({'_id': ctx.author.id},
+                                                         {'$set': {'business': current_business}})
+                                    sucess_harved = Embed(
+                                        title=f"""Congrats Bro, you have harvest {current_amount + (
+                                                give_amount * plant_amount)} {give_name}"""
+                                    )
+                            else:
+                                has_haved = Embed(
+                                    title='Yo, yo, yo bro you already harvest, try it later again',
+                                    color=Color.red)
+                                await ctx.channel.send(embed=has_haved)
+                else:
+                    not_harvestable = Embed(title='Yo dude you want to harvest somethinng that is not harvestable',
+                                            color=Color.red)
+                    await ctx.channel.send(embed=not_harvestable)
+
+    @commands.command(aliases=['inv'])
+    async def inventory(self, ctx):
+        farm_embed = Embed(title="You're Inventory:", color=Color.green)
         if inventory.find_one({'_id': ctx.author.id}):
             for i in inventory.find({'_id': ctx.author.id}):
                 business: dict = i['business']

@@ -23,9 +23,15 @@ class LvlCog(commands.Cog):
         if ctx.author == commands.bot:
             return
         generated_xp = self.xpgen(a=5, b=10)
-        if check := xp.find_one({'_id': f'{ctx.author.id}'}):
+        if check := xp.find({'_id': f'{ctx.author.id}'}):
             for _ in check:
-                pass
+                current_xp = _['how_much_xp']
+                current_xp += generated_xp
+                xp.update_one({'_id': f'{ctx.author}'}), {
+                    '$set': {'how_much_xp': current_xp}
+                }
+        else:
+            xp.insert_one({'_id': f'{ctx.author}', 'how_much_xp': generated_xp})
 
 
 def setup(bot):

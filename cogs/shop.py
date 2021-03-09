@@ -92,16 +92,16 @@ class ShopCog(commands.Cog):
                             else:
                                 has_haved = Embed(
                                     title='Yo, yo, yo bro you already harvest, try it later again',
-                                    color=Color.red)
+                                    color=0xff0000)
                                 await ctx.channel.send(embed=has_haved)
                 else:
                     not_harvestable = Embed(title='Yo dude you want to harvest somethinng that is not harvestable',
-                                            color=Color.red)
+                                            color=0xff0000)
                     await ctx.channel.send(embed=not_harvestable)
 
     @commands.command(aliases=['inv'])
     async def inventory(self, ctx):
-        farm_embed = Embed(title="You're Inventory:", color=Color.green)
+        farm_embed = Embed(title="You're Inventory:", color=0xff0000)
         if inventory.find_one({'_id': ctx.author.id}):
             for i in inventory.find({'_id': ctx.author.id}):
                 business: dict = i['business']
@@ -127,7 +127,7 @@ class ShopCog(commands.Cog):
                         inventory.update_one({'_id': ctx.author.id},
                                              {'$set': {'business': current_business}})
                         sucess_buy = Embed(
-                            title=f'Sucessfully buyed {name}, {amount} times', color=Color.green)
+                            title=f'Sucessfully buyed {name}, {amount} times', color=0x00ff00)
                         await ctx.channel.send(embed=sucess_buy)
                     else:
                         current_business[category][name] = {
@@ -135,7 +135,7 @@ class ShopCog(commands.Cog):
                         inventory.update_one({'_id': ctx.author.id},
                                              {'$set': {'business': current_business}})
                         sucess_buy = Embed(
-                            title=f'Sucessfully buyed {name}, {amount} times', color=Color.green)
+                            title=f'Sucessfully buyed {name}, {amount} times', color=0x00ff00)
                         await ctx.channel.send(embed=sucess_buy)
         else:
             dont_start_business = Embed(
@@ -156,14 +156,14 @@ class ShopCog(commands.Cog):
                         inventory.update_one({'_id': ctx.author.id},
                                              {'$set': {'category': current_business}})
                         sucess_buy = Embed(
-                            title=f'Sucessfully buyed {name}, {amount} times', color=Color.green)
+                            title=f'Sucessfully buyed {name}, {amount} times', color=0x00ff00)
                         await ctx.channel.send(embed=sucess_buy)
                     else:
                         current_business[category][name] = {'amount': amount}
                         inventory.update_one({'_id': ctx.author.id},
                                              {'$set': {'category': current_business}})
                         sucess_buy = Embed(
-                            title=f'Sucessfully buyed {name}, {amount} times', color=Color.green)
+                            title=f'Sucessfully buyed {name}, {amount} times', color=0x00ff00)
                         await ctx.channel.send(embed=sucess_buy)
 
     @commands.command()

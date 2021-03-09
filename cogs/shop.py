@@ -62,7 +62,7 @@ class ShopCog(commands.Cog):
         list_shop_embed = Embed(title='SHOP', color=Color.green)
         list_shop_embed.add_field(
             name='Grass', value='A little green Plant... look likes Tea...')
-        ctx.channel.send(embed=list_shop_embed)
+        await ctx.channel.send(embed=list_shop_embed)
 
     @commands.command()
     async def harvest(self, ctx, name):

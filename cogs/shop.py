@@ -22,7 +22,7 @@ class ShopCog(commands.Cog):
 
     def current_time(self):
         time = datetime.datetime.now(tz=timezome)
-        return int(time.strftime('%H.%M'))
+        return float(time.strftime('%H.%M'))
 
     async def insert_new_user(self, ctx):
         """
@@ -39,8 +39,12 @@ class ShopCog(commands.Cog):
         machines: {},
         }
         """
+        business = {
+            'drugs': {},
+            'weapons': {}
+        }
         inventory.insert_one(
-            {'_id': ctx.author.id, 'money': 1000, 'business': {}})
+            {'_id': ctx.author.id, 'money': 1000, 'business': business})
         get_money_embed = Embed(title='You got sucessfully 1000 $')
         await ctx.channel.send(embed=get_money_embed)
 
@@ -74,34 +78,63 @@ class ShopCog(commands.Cog):
                     give_name = i['give_name']
                     if inventory.find_one({'_id': ctx.author.id}):
                         for x in inventory.find({'_id': ctx.author.id}):
-                            current_business = x['business']
-                            plant_amount = current_business[category][name]['amount']
-                            has_harvest = current_business[category][name]['cooldown']
-                            if has_harvest - self.current_time() >= plant_cooldown:
-                                for y in shop_inventory.find({'_id': give_name}):
-                                    category = y['category']
-                                    current_amount = current_business[category][give_name]['amount']
-                                    current_business[category][give_name]['amount'] = current_amount + (
-                                        give_amount * plant_amount)
-                                    inventory.update_one({'_id': ctx.author.id},
-                                                         {'$set': {'business': current_business}})
-                                    sucess_harved = Embed(
-                                        title=f"""Congrats Bro, you have harvest {current_amount + (
-                                                give_amount * plant_amount)} {give_name}"""
-                                    )
+                            current_business: dict = x['business']
+                            if current_business != {}:
+                                if name in current_business[category].keys():
+                                    plant_amount = current_business[category][name]['amount']
+                                    has_harvest = current_business[category][name]['cooldown']
+                                    if has_harvest - self.current_time() <= plant_cooldown:
+                                        for y in shop_inventory.find({'_id': give_name}):
+                                            category = y['category']
+                                            current_amount = current_business[category][give_name]['amount']
+                                            if give_name in current_business[category].keys():
+                                                current_business[category][name]['cooldown'] = self.current_time(
+                                                )
+                                                current_business[category][give_name]['amount'] = current_amount + (
+                                                    give_amount * plant_amount)
+                                                inventory.update_one({'_id': ctx.author.id},
+                                                                     {'$set': {'business': current_business}})
+                                                sucess_harved = Embed(
+                                                    title=f"""Congrats Bro, you have harvest {current_amount + (
+                                                            give_amount * plant_amount)} {give_name}"""
+                                                )
+                                                await ctx.channel.send(embed=sucess_harved)
+                                            else:
+                                                current_business[category][name]['cooldown'] = self.current_time(
+                                                )
+                                                current_business[category][give_name] = {
+                                                    'amount': give_amount * plant_amount}
+                                                inventory.update_one({'_id': ctx.author.id},
+                                                                     {'$set': {'business': current_business}})
+                                                sucess_harved = Embed(
+                                                    title=f"""Congrats Bro, you have harvest {current_amount + (
+                                                            give_amount * plant_amount)} {give_name}"""
+                                                )
+                                                await ctx.channel.send(embed=sucess_harved)
+                                    else:
+                                        has_harved = Embed(
+                                            title='Yo, yo, yo bro you already harvest, try it later again',
+                                            color=0xFF0000)
+                                        await ctx.channel.send(embed=has_harved)
+                                else:
+                                    nothing_to_harvest = Embed(
+                                        title='Bro, you dont own this Plant...', color=0xFF0000)
+                                    await ctx.channel.send(embed=nothing_to_harvest)
                             else:
-                                has_haved = Embed(
-                                    title='Yo, yo, yo bro you already harvest, try it later again',
-                                    color=0xff0000)
-                                await ctx.channel.send(embed=has_haved)
+                                has_nothing = Embed(
+                                    title="Bro, you don't have anything to harvest", color=0xFF0000)
                 else:
                     not_harvestable = Embed(title='Yo dude you want to harvest somethinng that is not harvestable',
-                                            color=0xff0000)
+                                            color=0xFF0000)
                     await ctx.channel.send(embed=not_harvestable)
+        else:
+            not_harvestable = Embed(title='Yo dude you want to harvest somethinng that is not exist',
+                                    color=0xFF0000)
+            await ctx.channel.send(embed=not_harvestable)
 
     @commands.command(aliases=['inv'])
     async def inventory(self, ctx):
-        farm_embed = Embed(title="You're Inventory:", color=0xff0000)
+        farm_embed = Embed(title="You're Inventory:", color=0x2f9c3f)
         if inventory.find_one({'_id': ctx.author.id}):
             for i in inventory.find({'_id': ctx.author.id}):
                 business: dict = i['business']
@@ -116,10 +149,12 @@ class ShopCog(commands.Cog):
             for x in inventory.find({'_id': ctx.author.id}):
                 money = x['money']
                 current_business = x['business']
-                if money - price * amount >= 0:
+
+                if money - (price * amount) >= 0:
+                    updated_money = money - (price * amount)
                     inventory.update_one({'_id': ctx.author.id}, {
-                                         '$set': {'money': money - (price * amount)}})
-                    if name in current_business[category]:
+                                         '$set': {'money': updated_money}})
+                    if name in current_business[category].keys():
                         current_amount = current_business[category][name]['amount']
                         current_business[category][name]['amount'] = current_amount + amount
                         current_business[category][name]['cooldown'] = self.current_time(
@@ -127,7 +162,7 @@ class ShopCog(commands.Cog):
                         inventory.update_one({'_id': ctx.author.id},
                                              {'$set': {'business': current_business}})
                         sucess_buy = Embed(
-                            title=f'Sucessfully buyed {name}, {amount} times', color=0x00ff00)
+                            title=f'Sucessfully buyed {name}, {amount} times', color=0x2f9c3f)
                         await ctx.channel.send(embed=sucess_buy)
                     else:
                         current_business[category][name] = {
@@ -135,8 +170,12 @@ class ShopCog(commands.Cog):
                         inventory.update_one({'_id': ctx.author.id},
                                              {'$set': {'business': current_business}})
                         sucess_buy = Embed(
-                            title=f'Sucessfully buyed {name}, {amount} times', color=0x00ff00)
+                            title=f'Sucessfully buyed {name}, {amount} times', color=0x2f9c3f)
                         await ctx.channel.send(embed=sucess_buy)
+                else:
+                    not_enough_money = Embed(
+                        title="You don't have enough money Bro", color=0xFF0000)
+                    await ctx.channel.send(embed=not_enough_money)
         else:
             dont_start_business = Embed(
                 title="You don't started you're business yet.. maybe you start it with `.sb`?", color=0xff0000)
@@ -147,24 +186,34 @@ class ShopCog(commands.Cog):
             for x in inventory.find({'_id': ctx.author.id}):
                 money = x['money']
                 current_business = x['business']
-                if money - price * amount >= 0:
+                if money - (price * amount) >= 0:
+                    updated_money = money - (price * amount)
                     inventory.update_one({'_id': ctx.author.id}, {
-                                         '$set': {'money': money - (price * amount)}})
-                    if name in current_business[category]:
+                                         '$set': {'money': updated_money}})
+                    if name in current_business[category].keys():
                         current_amount = current_business[category][name]['amount']
                         current_business[category][name]['amount'] = current_amount + amount
                         inventory.update_one({'_id': ctx.author.id},
-                                             {'$set': {'category': current_business}})
+                                             {'$set': {'business': current_business}})
                         sucess_buy = Embed(
-                            title=f'Sucessfully buyed {name}, {amount} times', color=0x00ff00)
+                            title=f'Sucessfully buyed {name}, {amount} times', color=0x2f9c3f)
                         await ctx.channel.send(embed=sucess_buy)
                     else:
-                        current_business[category][name] = {'amount': amount}
+                        current_business[category][name] = {
+                            'amount': amount}
                         inventory.update_one({'_id': ctx.author.id},
-                                             {'$set': {'category': current_business}})
+                                             {'$set': {'business': current_business}})
                         sucess_buy = Embed(
-                            title=f'Sucessfully buyed {name}, {amount} times', color=0x00ff00)
+                            title=f'Sucessfully buyed {name}, {amount} times', color=0x2f9c3f)
                         await ctx.channel.send(embed=sucess_buy)
+                else:
+                    not_enough_money = Embed(
+                        title="You don't have enough money Bro", color=0xFF0000)
+                    await ctx.channel.send(embed=not_enough_money)
+        else:
+            dont_start_business = Embed(
+                title="You don't started you're business yet.. maybe you start it with `.sb`?", color=0xff0000)
+            await ctx.channel.send(embed=dont_start_business)
 
     @commands.command()
     async def buy(self, ctx, name, amount=1):
@@ -174,10 +223,15 @@ class ShopCog(commands.Cog):
                 category = i['category']
                 need_cooldown = i['cooldown']
                 if need_cooldown:
-                    self.buy_with_cooldown(
-                        ctx=ctx, name=name, price=price, category=category, amount=amount)
-                self.buy_without_cooldown(
-                    ctx=ctx, name=name, price=price, category=category, amount=amount)
+                    await self.buy_with_cooldown(
+                        ctx = ctx, name = name, price = price, category = category, amount = amount)
+                else:
+                    await self.buy_without_cooldown(
+                        ctx = ctx, name = name, price = price, category = category, amount = amount)
+        else:
+            not_listet=Embed(
+                title = 'Bro, i dont have something like that..., maby you look by `.ls`?')
+            await ctx.channel.send(embed = not_listet)
 
 
 def setup(bot):
@@ -187,7 +241,7 @@ def setup(bot):
 # ToDo: Add first Element to shop_inventory db
 """
 shop inv looks like
-'_id': <str: drug/plant-name>,'has_cooldown': <bool: Need cooldown> ,'cooldown': <int: hours to wait, when needed(negative)>, 
+'_id': <str: drug/plant-name>,'has_cooldown': <bool: Need cooldown> ,'cooldown': <int: hours to wait, when needed(negative)>,
 'price': <int/float: to buy this>, 'resell_price': <int/float: to resell this>, 'category': <str: name of category>,
 'give_amount': <int: amount of get when harvest>, 'give': <str: name of thing to get when harvest>
 

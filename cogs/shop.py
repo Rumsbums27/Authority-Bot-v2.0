@@ -62,10 +62,13 @@ class ShopCog(commands.Cog):
 
     @commands.command(aliases=['ls', 'list-shop', 'listShop', 'Listshop'])
     async def list_shop(self, ctx):
-        list_shop_embed = Embed(title='SHOP', color=0x00ff00)
-        list_shop_embed.add_field(
-            name='Grass', value='A little green Plant... look likes Tea...')
-        await ctx.channel.send(embed=list_shop_embed)
+        shop_embed = Embed(title="SHOP:", color=0x2f9c3f)
+        for i in shop_inventory.find():
+            name = i['_id']
+            desc = i['desc']
+            shop_embed.add_field(
+                name=name, value=f"{desc}", inline=False)
+        await ctx.channel.send(embed=shop_embed)    
 
     @commands.command()
     async def harvest(self, ctx, name):
@@ -141,7 +144,7 @@ class ShopCog(commands.Cog):
                 drugs = business['drugs']
                 for x in drugs:
                     farm_embed.add_field(
-                        name=x, value=f"Amount: {drugs[x]['amount']}")
+                        name=x, value=f"Amount: {drugs[x]['amount']}", inline=False)
                 await ctx.channel.send(embed=farm_embed)
 
     async def buy_with_cooldown(self, ctx, name, price, category, amount):
@@ -224,14 +227,62 @@ class ShopCog(commands.Cog):
                 need_cooldown = i['cooldown']
                 if need_cooldown:
                     await self.buy_with_cooldown(
-                        ctx = ctx, name = name, price = price, category = category, amount = amount)
+                        ctx=ctx, name=name, price=price, category=category, amount=amount)
                 else:
                     await self.buy_without_cooldown(
-                        ctx = ctx, name = name, price = price, category = category, amount = amount)
+                        ctx=ctx, name=name, price=price, category=category, amount=amount)
         else:
-            not_listet=Embed(
-                title = 'Bro, i dont have something like that..., maby you look by `.ls`?')
-            await ctx.channel.send(embed = not_listet)
+            not_listet = Embed(
+                title='Bro, i dont have something like that..., maby you look by `.ls`?')
+            await ctx.channel.send(embed=not_listet)
+
+    @commands.command()
+    async def sell(self, ctx, name, amount=1):
+        if shop_inventory.find_one({'_id': name}):
+            for i in shop_inventory.find({'_id': name}):
+                resell_price = i['resell_price']
+                category = i['category']
+                if inventory.find_one({'_id': ctx.author.id}):
+                    for x in inventory.find({'_id': ctx.author.id}):
+                        money = x['money']
+                        current_business = x['business']
+                        has_amount = current_business[category][name]['amount']
+                        if has_amount - amount >= 0:
+                            updated_money = money + (resell_price * amount)
+                            current_business[category][name] = {
+                                'amount': has_amount - amount}
+                            inventory.update_one({'_id': ctx.author.id},
+                                                 {'$set': {'business': current_business}})
+                            inventory.update_one({'_id': ctx.author.id},
+                                                 {'$set': {'money': updated_money}})
+                            sucess_sell = Embed(
+                                title=f'Sucessfully selled {name}, {amount} times', color=0x2f9c3f)
+                            await ctx.channel.send(embed=sucess_sell)
+
+                        else:
+                            has_not_enough = Embed(
+                                title="You don't have enough Bro", color=0xFF0000)
+                            await ctx.channel.send(embed=has_not_enough)
+                else:
+                    dont_start_business = Embed(
+                        title="You don't started you're business yet.. maybe you start it with `.sb`?", color=0xff0000)
+                    await ctx.channel.send(embed=dont_start_business)
+        else:
+            not_exist = Embed(
+                title="Bro, where are you from this don't exist?!?")
+            await ctx.channel.send(embed=not_listet)
+
+    @commands.command()
+    async def money(self, ctx):
+        if inventory.find_one({'_id': ctx.author.id}):
+            for x in inventory.find({'_id': ctx.author.id}):
+                money = x['money']
+                money_embed = Embed(title=f"You have {money}$ on the Bank", color=0x2f9c3f)
+                await ctx.channel.send(embed=money_embed)
+        else:
+            dont_start_business = Embed(
+                title="You don't started you're business yet.. maybe you start it with `.sb`?", color=0xff0000)
+            await ctx.channel.send(embed=dont_start_business)
 
 
 def setup(bot):

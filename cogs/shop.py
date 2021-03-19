@@ -68,7 +68,7 @@ class ShopCog(commands.Cog):
             desc = i['desc']
             shop_embed.add_field(
                 name=name, value=f"{desc}", inline=False)
-        await ctx.channel.send(embed=shop_embed)    
+        await ctx.channel.send(embed=shop_embed)
 
     @commands.command()
     async def harvest(self, ctx, name):
@@ -94,7 +94,7 @@ class ShopCog(commands.Cog):
                                                 current_business[category][name]['cooldown'] = self.current_time(
                                                 )
                                                 current_business[category][give_name]['amount'] = current_amount + (
-                                                    give_amount * plant_amount)
+                                                        give_amount * plant_amount)
                                                 inventory.update_one({'_id': ctx.author.id},
                                                                      {'$set': {'business': current_business}})
                                                 sucess_harved = Embed(
@@ -156,7 +156,7 @@ class ShopCog(commands.Cog):
                 if money - (price * amount) >= 0:
                     updated_money = money - (price * amount)
                     inventory.update_one({'_id': ctx.author.id}, {
-                                         '$set': {'money': updated_money}})
+                        '$set': {'money': updated_money}})
                     if name in current_business[category].keys():
                         current_amount = current_business[category][name]['amount']
                         current_business[category][name]['amount'] = current_amount + amount
@@ -192,7 +192,7 @@ class ShopCog(commands.Cog):
                 if money - (price * amount) >= 0:
                     updated_money = money - (price * amount)
                     inventory.update_one({'_id': ctx.author.id}, {
-                                         '$set': {'money': updated_money}})
+                        '$set': {'money': updated_money}})
                     if name in current_business[category].keys():
                         current_amount = current_business[category][name]['amount']
                         current_business[category][name]['amount'] = current_amount + amount
@@ -270,7 +270,7 @@ class ShopCog(commands.Cog):
         else:
             not_exist = Embed(
                 title="Bro, where are you from this don't exist?!?")
-            await ctx.channel.send(embed=not_listet)
+            await ctx.channel.send(embed=not_exist)
 
     @commands.command()
     async def money(self, ctx):
@@ -292,7 +292,8 @@ def setup(bot):
 # ToDo: Add first Element to shop_inventory db
 """
 shop inv looks like
-'_id': <str: drug/plant-name>,'has_cooldown': <bool: Need cooldown> ,'cooldown': <int: hours to wait, when needed(negative)>,
+'_id': <str: drug/plant-name>,'has_cooldown': <bool: Need cooldown> ,'cooldown': 
+<int: hours to wait, when needed(negative)>,
 'price': <int/float: to buy this>, 'resell_price': <int/float: to resell this>, 'category': <str: name of category>,
 'give_amount': <int: amount of get when harvest>, 'give': <str: name of thing to get when harvest>
 
